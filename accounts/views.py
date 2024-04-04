@@ -1,3 +1,6 @@
+import secrets
+import bcrypt
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -5,8 +8,9 @@ from rest_framework import status
 
 from django.contrib.auth import authenticate, login
 
-from .models import CustomUser
+from .models import CustomUser, CustomToken
 from .serializers import CustomUserSerializer, LoginSerializer
+from .authentication import expired_token_handler, expires_in
 
 class UserViewSet(viewsets.ViewSet):
     # permission_classes = [IsAuthenticated]
@@ -44,6 +48,13 @@ class UserViewSet(viewsets.ViewSet):
         )
 
 class LoginViewSet(viewsets.ViewSet):
+    def token_generator(self, user):
+        """function to generate a bcrypted token"""
+        key = bcrypt.hashpw(secrets.token_hex(50).encode('utf-8'), bcrypt.gensalt())
+        key = key.decode('utf-8')
+        token, _ = CustomToken.objects.update_or_create(user=user, defaults={'key': key})
+        return token
+
     def create(self, request):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
@@ -60,13 +71,22 @@ class LoginViewSet(viewsets.ViewSet):
                 {"message": "Invalid credentials", 'code': 400},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        print(user)
-        if login(request, user):
-            return Response(
-                {"message": "Login successful", 'code': 200},
-                status=status.HTTP_200_OK)
 
+        try:
+            token = CustomToken.objects.get(user=user)
+            is_expired, token = expired_token_handler(token)
+            if is_expired:
+                token = self.token_generator(user)
+        except CustomToken.DoesNotExist:
+            token = self.token_generator(user)
+
+        authenticated_user = CustomUserSerializer(user)
         return Response(
-            {"message": "Login failed", 'code': 400},
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "message": "Login successful",
+                "user": authenticated_user.data,
+                "token": token.key,
+                'code': 200
+            },
+            status=status.HTTP_200_OK
         )

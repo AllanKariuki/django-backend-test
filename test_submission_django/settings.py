@@ -31,13 +31,14 @@ INSTALLED_APPS = [
     'users',
     'rest_framework',
     'accounts',
+    'newapp',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -63,6 +64,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'test_submission_django.wsgi.application'
 AUTH_USER_MODEL = 'accounts.CustomUser'
+AUTH_TOKEN_MODEL = 'accounts.CustomToken'
+TOKEN_LIFESPAN = 3600
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accounts.authentication.CustomAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        # 'rest_framework.permissions.IsAuthenticated',
+    ],
+
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
