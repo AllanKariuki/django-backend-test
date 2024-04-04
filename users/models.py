@@ -7,7 +7,7 @@ class UserData(models.Model):
     last_name = models.CharField(max_length=30)
     age = models.IntegerField()
     town = models.CharField(max_length=30)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=10)
 
     def __str__(self):
         return self.first_name

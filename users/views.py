@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import UserData
 from .serializers import UserDataSerializer
 
-class ProfileViewSet(viewsets.Viewset):
+class UserDataViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = UserDataSerializer(data=request.data)
         if serializer.is_valid():
@@ -13,6 +13,7 @@ class ProfileViewSet(viewsets.Viewset):
         return Response({'data': serializer.errors, 'code': 400}, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
+        print(request.user)
         user = request.data.get('user')
         try:
             user_data = UserData.objects.filter(user=user)
