@@ -13,7 +13,6 @@ from .serializers import CustomUserSerializer, LoginSerializer
 from .authentication import expired_token_handler, expires_in
 
 class UserViewSet(viewsets.ViewSet):
-    # permission_classes = [IsAuthenticated]
 
     def list(self, request):
         queryset = CustomUser.objects.all()
@@ -88,5 +87,22 @@ class LoginViewSet(viewsets.ViewSet):
                 "token": token.key,
                 'code': 200
             },
+            status=status.HTTP_200_OK
+        )
+
+class LogoutViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    def create(self, request):
+        token = request.headers.get('Authorization')
+        try:
+            token = CustomToken.objects.get(key=token)
+            token.delete()
+        except CustomToken.DoesNotExist:
+            return Response(
+                {"message": "Invalid token", 'code': 400},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            {"message": "Logout successful", 'code': 200},
             status=status.HTTP_200_OK
         )
